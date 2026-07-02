@@ -10,9 +10,9 @@ export default async ({ req, res, log, error }) => {
       return res.json({ success: false, error: 'email y password son requeridos' }, 400);
     }
 
-    // Inicialización del cliente usando las variables del entorno de Appwrite
+    // Inicialización del cliente usando las variables del entorno inyectadas por Appwrite Cloud
     const client = new Client()
-      .setEndpoint(process.env.APPWRITE_URL || 'https://cloud.appwrite.io/v1') // Variable oficial: APPWRITE_URL
+      .setEndpoint(process.env.APPWRITE_FUNCTION_ENDPOINT)
       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
       .setKey(process.env.APPWRITE_API_KEY);
 
