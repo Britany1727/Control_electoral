@@ -22,6 +22,7 @@ abstract class VeedorRepository {
     String actaId,
   );
   Future<Either<Failure, List<Map<String, dynamic>>>> getOrganizaciones();
+  Future<Either<Failure, Map<String, int>>> getVotosPorActa(String actaId);
   Future<Either<Failure, Null>> corregirActaVeedor(
     String actaId,
     int totalSufragantes,

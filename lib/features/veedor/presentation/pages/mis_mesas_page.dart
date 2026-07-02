@@ -5,6 +5,7 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/veedor_bloc.dart';
 import '../bloc/veedor_event.dart';
 import '../bloc/veedor_state.dart';
+import 'corregir_acta_page.dart';
 
 class MisMesasPage extends StatefulWidget {
   const MisMesasPage({super.key});
@@ -17,12 +18,35 @@ class _MisMesasPageState extends State<MisMesasPage> {
   @override
   void initState() {
     super.initState();
+    _loadMesas();
+  }
+
+  void _loadMesas() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       context
           .read<VeedorBloc>()
           .add(LoadMesasVeedor(veedorId: authState.usuario.id));
     }
+  }
+
+  void _navegarCorregir(Map<String, dynamic> acta) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<VeedorBloc>(),
+          child: CorregirActaPage(
+            actaId: acta['id'] as String,
+            mesaId: acta['mesa_id'] as String,
+            dignidad: acta['dignidad'] as String,
+            totalSufragantes: acta['total_sufragantes'] as int,
+            votosNulos: acta['votos_nulos'] as int,
+            votosBlancos: acta['votos_blancos'] as int,
+            fotoUrl: acta['foto_url'] as String?,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -42,16 +66,7 @@ class _MisMesasPageState extends State<MisMesasPage> {
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      final authState =
-                          context.read<AuthBloc>().state;
-                      if (authState is AuthAuthenticated) {
-                        context.read<VeedorBloc>().add(
-                              LoadMesasVeedor(
-                                  veedorId: authState.usuario.id),
-                            );
-                      }
-                    },
+                    onPressed: _loadMesas,
                     child: const Text('Reintentar'),
                   ),
                 ],
@@ -65,14 +80,7 @@ class _MisMesasPageState extends State<MisMesasPage> {
               );
             }
             return RefreshIndicator(
-              onRefresh: () async {
-                final authState = context.read<AuthBloc>().state;
-                if (authState is AuthAuthenticated) {
-                  context.read<VeedorBloc>().add(
-                        LoadMesasVeedor(veedorId: authState.usuario.id),
-                      );
-                }
-              },
+              onRefresh: () async => _loadMesas(),
               child: ListView.builder(
                 itemCount: state.mesas.length,
                 itemBuilder: (context, index) {
@@ -101,13 +109,24 @@ class _MisMesasPageState extends State<MisMesasPage> {
                           )
                         else
                           ...actas.map(
-                            (acta) => ListTile(
-                              title: Text(
-                                  'Acta: ${acta['dignidad']}'),
-                              subtitle: Text(
-                                'Total: ${acta['total_sufragantes']}',
-                              ),
-                            ),
+                            (actaRaw) {
+                              final acta =
+                                  actaRaw as Map<String, dynamic>;
+                              return ListTile(
+                                title: Text(
+                                    'Acta: ${acta['dignidad']}'),
+                                subtitle: Text(
+                                  'Total: ${acta['total_sufragantes']}',
+                                ),
+                                trailing: TextButton.icon(
+                                  onPressed: () =>
+                                      _navegarCorregir(acta),
+                                  icon: const Icon(Icons.edit,
+                                      size: 18),
+                                  label: const Text('Corregir'),
+                                ),
+                              );
+                            },
                           ),
                       ],
                     ),

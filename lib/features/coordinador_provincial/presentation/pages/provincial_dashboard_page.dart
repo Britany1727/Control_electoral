@@ -7,6 +7,7 @@ import '../../../auth/presentation/widgets/email_verification_banner.dart';
 import '../bloc/provincial_bloc.dart';
 import 'create_coordinador_page.dart';
 import 'create_recinto_page.dart';
+import 'informe_electoral_page.dart';
 import 'recintos_list_page.dart';
 import 'votos_consolidados_page.dart';
 
@@ -128,6 +129,21 @@ class ProvincialDashboardPage extends StatelessWidget {
                       builder: (_) => BlocProvider.value(
                         value: context.read<ProvincialBloc>(),
                         child: const VotosConsolidadosPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _DashboardButton(
+                icon: Icons.assessment,
+                label: 'Informe Electoral',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<ProvincialBloc>(),
+                        child: const InformeElectoralPage(),
                       ),
                     ),
                   );

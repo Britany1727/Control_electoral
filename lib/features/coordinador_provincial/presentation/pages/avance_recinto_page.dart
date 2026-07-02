@@ -153,7 +153,16 @@ class _AvanceRecintoPageState extends State<AvanceRecintoPage> {
               ),
             );
           }
-          return const SizedBox.shrink();
+          if (state is! ProvincialInitial) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<ProvincialBloc>().add(
+                      LoadAvanceRecinto(recintoId: widget.recintoId),
+                    );
+              }
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

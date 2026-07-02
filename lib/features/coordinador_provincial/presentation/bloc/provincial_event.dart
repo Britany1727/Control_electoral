@@ -93,6 +93,13 @@ class LoadActasPorRecinto extends ProvincialEvent {
   List<Object?> get props => [recintoId];
 }
 
+class LoadResumenGlobal extends ProvincialEvent {
+  const LoadResumenGlobal();
+
+  @override
+  List<Object?> get props => [];
+}
+
 class LoadDetalleActa extends ProvincialEvent {
   final String actaId;
   final String mesaId;

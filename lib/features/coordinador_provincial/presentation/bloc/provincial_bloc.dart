@@ -8,6 +8,7 @@ import '../../domain/usecases/get_avance_recinto_usecase.dart';
 import '../../domain/usecases/get_detalle_acta_usecase.dart';
 import '../../domain/usecases/get_recintos_sin_coordinador_usecase.dart';
 import '../../domain/usecases/get_recintos_usecase.dart';
+import '../../domain/usecases/get_resumen_global_usecase.dart';
 import '../../domain/usecases/get_votos_consolidados_usecase.dart';
 import 'provincial_event.dart';
 import 'provincial_state.dart';
@@ -21,6 +22,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
   final GetVotosConsolidadosUseCase getVotosConsolidadosUseCase;
   final GetDetalleActaUseCase getDetalleActaUseCase;
   final GetActasPorRecintoUseCase getActasPorRecintoUseCase;
+  final GetResumenGlobalUseCase getResumenGlobalUseCase;
 
   ProvincialBloc({
     required this.getRecintosUseCase,
@@ -31,6 +33,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     required this.getVotosConsolidadosUseCase,
     required this.getDetalleActaUseCase,
     required this.getActasPorRecintoUseCase,
+    required this.getResumenGlobalUseCase,
   }) : super(const ProvincialInitial()) {
     on<LoadRecintos>(_onLoadRecintos);
     on<CreateRecinto>(_onCreateRecinto, transformer: droppable());
@@ -43,6 +46,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     on<LoadVotosConsolidados>(_onLoadVotosConsolidados);
     on<LoadActasPorRecinto>(_onLoadActasPorRecinto);
     on<LoadDetalleActa>(_onLoadDetalleActa);
+    on<LoadResumenGlobal>(_onLoadResumenGlobal);
   }
 
   Future<void> _onLoadRecintos(
@@ -169,6 +173,22 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     result.fold(
       (failure) => emit(ProvincialError(message: failure.message)),
       (detalle) => emit(DetalleActaLoaded(detalle: detalle)),
+    );
+  }
+
+  Future<void> _onLoadResumenGlobal(
+    LoadResumenGlobal event,
+    Emitter<ProvincialState> emit,
+  ) async {
+    emit(const ProvincialLoading());
+    final result = await getResumenGlobalUseCase(const NoParams());
+    result.fold(
+      (failure) => emit(ProvincialError(message: failure.message)),
+      (resumen) => emit(ResumenGlobalLoaded(
+        totalRecintos: resumen['total_recintos'] ?? 0,
+        totalMesas: resumen['total_mesas'] ?? 0,
+        actasRegistradas: resumen['actas_registradas'] ?? 0,
+      )),
     );
   }
 }

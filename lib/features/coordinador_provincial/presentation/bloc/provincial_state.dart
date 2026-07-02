@@ -63,6 +63,21 @@ class CoordinadorRecintoCreated extends ProvincialState {
   const CoordinadorRecintoCreated();
 }
 
+class ResumenGlobalLoaded extends ProvincialState {
+  final int totalRecintos;
+  final int totalMesas;
+  final int actasRegistradas;
+
+  const ResumenGlobalLoaded({
+    required this.totalRecintos,
+    required this.totalMesas,
+    required this.actasRegistradas,
+  });
+
+  @override
+  List<Object?> get props => [totalRecintos, totalMesas, actasRegistradas];
+}
+
 class VotosConsolidadosLoaded extends ProvincialState {
   final List<VotosConsolidados> votos;
 

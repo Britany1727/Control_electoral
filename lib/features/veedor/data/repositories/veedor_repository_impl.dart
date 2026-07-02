@@ -138,6 +138,16 @@ class VeedorRepositoryImpl implements VeedorRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, int>>> getVotosPorActa(String actaId) async {
+    try {
+      final votos = await remoteDatasource.getVotosPorActa(actaId);
+      return Right(votos);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, Null>> corregirActaVeedor(
     String actaId,
     int totalSufragantes,

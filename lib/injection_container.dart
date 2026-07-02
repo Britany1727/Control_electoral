@@ -28,6 +28,7 @@ import 'features/coordinador_provincial/domain/usecases/get_avance_recinto_useca
 import 'features/coordinador_provincial/domain/usecases/get_detalle_acta_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_recintos_sin_coordinador_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_recintos_usecase.dart';
+import 'features/coordinador_provincial/domain/usecases/get_resumen_global_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_votos_consolidados_usecase.dart';
 import 'features/coordinador_provincial/presentation/bloc/provincial_bloc.dart';
 import 'features/coordinador_recinto/data/datasources/recinto_remote_datasource.dart';
@@ -49,6 +50,7 @@ import 'features/veedor/domain/repositories/veedor_repository.dart';
 import 'features/veedor/domain/usecases/corregir_acta_veedor_usecase.dart';
 import 'features/veedor/domain/usecases/get_mesas_veedor_usecase.dart';
 import 'features/veedor/domain/usecases/get_organizaciones_usecase.dart';
+import 'features/veedor/domain/usecases/get_votos_por_acta_usecase.dart';
 import 'features/veedor/domain/usecases/registrar_acta_usecase.dart';
 import 'features/veedor/domain/usecases/subir_foto_acta_usecase.dart';
 import 'features/veedor/presentation/bloc/veedor_bloc.dart';
@@ -109,6 +111,7 @@ Future<void> init() async {
         getVotosConsolidadosUseCase: sl(),
         getDetalleActaUseCase: sl(),
         getActasPorRecintoUseCase: sl(),
+        getResumenGlobalUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetRecintosUseCase(sl()));
   sl.registerLazySingleton(() => CreateRecintoUseCase(sl()));
@@ -117,6 +120,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetRecintosSinCoordinadorUseCase(sl()));
   sl.registerLazySingleton(() => GetVotosConsolidadosUseCase(sl()));
   sl.registerLazySingleton(() => GetDetalleActaUseCase(sl()));
+  sl.registerLazySingleton(() => GetResumenGlobalUseCase(sl()));
   sl.registerLazySingleton(() => GetActasPorRecintoUseCase(sl()));
   sl.registerLazySingleton<ProvincialRepository>(
       () => ProvincialRepositoryImpl(sl()));
@@ -162,12 +166,14 @@ Future<void> init() async {
         registrarActaUseCase: sl(),
         subirFotoActaUseCase: sl(),
         corregirActaVeedorUseCase: sl(),
+        getVotosPorActaUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetMesasVeedorUseCase(sl()));
   sl.registerLazySingleton(() => GetOrganizacionesUseCase(sl()));
   sl.registerLazySingleton(() => RegistrarActaUseCase(sl()));
   sl.registerLazySingleton(() => SubirFotoActaUseCase(sl()));
   sl.registerLazySingleton(() => CorregirActaVeedorUseCase(sl()));
+  sl.registerLazySingleton(() => GetVotosPorActaUseCase(sl()));
   sl.registerLazySingleton<VeedorRepository>(
       () => VeedorRepositoryImpl(sl(), sl()));
   sl.registerLazySingleton<VeedorRemoteDatasource>(

@@ -28,6 +28,7 @@ abstract class ProvincialRemoteDatasource {
     String password,
   );
   Future<Map<String, int>> getAvanceRecinto(String recintoId);
+  Future<Map<String, dynamic>> getResumenGlobal();
   Future<List<ActaModel>> getActasPorRecinto(String recintoId);
   Future<List<VotosConsolidados>> getVotosConsolidados(String? recintoId);
   Future<DetalleActaCompleto> getDetalleActa(String actaId, String mesaId);
@@ -247,12 +248,12 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         final actasDocs = await databases.listDocuments(
           databaseId: AppwriteConstants.databaseId,
           collectionId: AppwriteConstants.actasCollectionId,
-          queries: [
-            Query.equal('mesa_id', mesaIds),
-            Query.equal('estado', 'registrada'),
-          ],
         );
-        actasRegistradas = actasDocs.documents.length;
+        actasRegistradas = actasDocs.documents
+            .where((doc) =>
+                mesaIds.contains(doc.data['mesa_id']) &&
+                doc.data['estado'] == 'registrada')
+            .length;
       }
 
       return {
@@ -261,6 +262,40 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
       };
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener avance');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getResumenGlobal() async {
+    try {
+      final recintosDocs = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.recintosCollectionId,
+      );
+      final totalRecintos = recintosDocs.documents.length;
+
+      final mesasDocs = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.mesasCollectionId,
+      );
+      final totalMesas = mesasDocs.documents.length;
+
+      int actasRegistradas = 0;
+      final actasDocs = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.actasCollectionId,
+      );
+      actasRegistradas = actasDocs.documents
+          .where((doc) => doc.data['estado'] == 'registrada')
+          .length;
+
+      return {
+        'total_recintos': totalRecintos,
+        'total_mesas': totalMesas,
+        'actas_registradas': actasRegistradas,
+      };
+    } on AppwriteException catch (e) {
+      throw ServerException(e.message ?? 'Error al obtener resumen global');
     }
   }
 
@@ -279,13 +314,12 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
       final actasDocs = await databases.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.actasCollectionId,
-        queries: [
-          Query.equal('mesa_id', mesaIds),
-          Query.equal('estado', 'registrada'),
-        ],
       );
 
       return actasDocs.documents
+          .where((doc) =>
+              mesaIds.contains(doc.data['mesa_id']) &&
+              doc.data['estado'] == 'registrada')
           .map((doc) => ActaModel.fromMap(doc.data, doc.$id))
           .toList();
     } on AppwriteException catch (e) {
@@ -332,17 +366,17 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
       final actasDocs = await databases.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.actasCollectionId,
-        queries: [
-          Query.equal('mesa_id', mesasIds),
-          Query.equal('estado', 'registrada'),
-        ],
       );
 
-      if (actasDocs.documents.isEmpty) return [];
+      final actasRegistradas = actasDocs.documents.where((doc) =>
+          mesasIds.contains(doc.data['mesa_id']) &&
+          doc.data['estado'] == 'registrada');
 
-      final actaIds = actasDocs.documents.map((d) => d.$id).toList();
+      if (actasRegistradas.isEmpty) return [];
+
+      final actaIds = actasRegistradas.map((d) => d.$id).toList();
       final actaDignidades = <String, String>{};
-      for (final doc in actasDocs.documents) {
+      for (final doc in actasRegistradas) {
         actaDignidades[doc.$id] = doc.data['dignidad'] as String;
       }
 

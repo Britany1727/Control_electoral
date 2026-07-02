@@ -28,6 +28,7 @@ abstract class VeedorRemoteDatasource {
   );
   Future<Map<String, dynamic>> getActaPorId(String actaId);
   Future<void> eliminarActa(String actaId);
+  Future<Map<String, int>> getVotosPorActa(String actaId);
 }
 
 class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
@@ -59,15 +60,19 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
         final actasDocs = await databases.listDocuments(
           databaseId: AppwriteConstants.databaseId,
           collectionId: AppwriteConstants.actasCollectionId,
-          queries: [Query.equal('mesa_id', mesa.$id)],
         );
+
+        final actasMesa = actasDocs.documents
+            .where((doc) => doc.data['mesa_id'] == mesa.$id)
+            .toList();
 
         result.add({
           'mesa': mesa.data,
           'mesa_id': mesa.$id,
           'recinto': recintoDocs.data,
-          'actas':
-              actasDocs.documents.map((d) => {'id': d.$id, ...d.data}).toList(),
+          'actas': actasMesa
+              .map((d) => {'id': d.$id, ...d.data})
+              .toList(),
         });
       }
       return result;
@@ -241,6 +246,26 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       );
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al eliminar acta');
+    }
+  }
+
+  @override
+  Future<Map<String, int>> getVotosPorActa(String actaId) async {
+    try {
+      final docs = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.votosCollectionId,
+        queries: [Query.equal('acta_id', actaId)],
+      );
+      final votos = <String, int>{};
+      for (final doc in docs.documents) {
+        final orgId = doc.data['organizacion_id'] as String;
+        final cantidad = doc.data['votos'] as int;
+        votos[orgId] = cantidad;
+      }
+      return votos;
+    } on AppwriteException catch (e) {
+      throw ServerException(e.message ?? 'Error al obtener votos del acta');
     }
   }
 }

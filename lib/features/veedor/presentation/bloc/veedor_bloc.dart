@@ -3,6 +3,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../domain/usecases/corregir_acta_veedor_usecase.dart';
 import '../../domain/usecases/get_mesas_veedor_usecase.dart';
 import '../../domain/usecases/get_organizaciones_usecase.dart';
+import '../../domain/usecases/get_votos_por_acta_usecase.dart';
 import '../../domain/usecases/registrar_acta_usecase.dart';
 import '../../domain/usecases/subir_foto_acta_usecase.dart';
 import 'veedor_event.dart';
@@ -14,6 +15,7 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   final RegistrarActaUseCase registrarActaUseCase;
   final SubirFotoActaUseCase subirFotoActaUseCase;
   final CorregirActaVeedorUseCase corregirActaVeedorUseCase;
+  final GetVotosPorActaUseCase getVotosPorActaUseCase;
 
   VeedorBloc({
     required this.getMesasVeedorUseCase,
@@ -21,12 +23,14 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
     required this.registrarActaUseCase,
     required this.subirFotoActaUseCase,
     required this.corregirActaVeedorUseCase,
+    required this.getVotosPorActaUseCase,
   }) : super(const VeedorInitial()) {
     on<LoadMesasVeedor>(_onLoadMesasVeedor);
     on<LoadOrganizaciones>(_onLoadOrganizaciones);
     on<RegistrarActa>(_onRegistrarActa);
     on<SubirFotoActa>(_onSubirFotoActa);
     on<CorregirActaVeedor>(_onCorregirActaVeedor);
+    on<LoadVotosPorActa>(_onLoadVotosPorActa);
   }
 
   Future<void> _onLoadMesasVeedor(
@@ -93,6 +97,20 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
     result.fold(
       (failure) => emit(VeedorError(message: failure.message)),
       (url) => emit(FotoSubida(fotoUrl: url)),
+    );
+  }
+
+  Future<void> _onLoadVotosPorActa(
+    LoadVotosPorActa event,
+    Emitter<VeedorState> emit,
+  ) async {
+    emit(const VeedorLoading());
+    final result = await getVotosPorActaUseCase(
+      GetVotosPorActaParams(actaId: event.actaId),
+    );
+    result.fold(
+      (failure) => emit(VeedorError(message: failure.message)),
+      (votos) => emit(VotosPorActaLoaded(votos: votos)),
     );
   }
 

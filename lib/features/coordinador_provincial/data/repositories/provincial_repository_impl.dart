@@ -94,6 +94,16 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, dynamic>>> getResumenGlobal() async {
+    try {
+      final resumen = await remoteDatasource.getResumenGlobal();
+      return Right(resumen);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<Acta>>> getActasPorRecinto(
     String recintoId,
   ) async {

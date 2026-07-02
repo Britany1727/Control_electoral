@@ -96,7 +96,7 @@ class _FotoActaPageState extends State<FotoActaPage> {
                 ),
               );
             }
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            Navigator.of(context).pop();
           }
           if (state is VeedorError) {
             ScaffoldMessenger.of(context).showSnackBar(

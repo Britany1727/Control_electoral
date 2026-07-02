@@ -52,6 +52,15 @@ class FotoSubida extends VeedorState {
   List<Object?> get props => [fotoUrl];
 }
 
+class VotosPorActaLoaded extends VeedorState {
+  final Map<String, int> votos;
+
+  const VotosPorActaLoaded({required this.votos});
+
+  @override
+  List<Object?> get props => [votos];
+}
+
 class ActaCorregida extends VeedorState {
   const ActaCorregida();
 }

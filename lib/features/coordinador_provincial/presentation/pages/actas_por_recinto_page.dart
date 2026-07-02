@@ -112,7 +112,16 @@ class _ActasPorRecintoPageState extends State<ActasPorRecintoPage> {
               ),
             );
           }
-          return const SizedBox.shrink();
+          if (state is! ProvincialInitial) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<ProvincialBloc>().add(
+                      LoadActasPorRecinto(recintoId: widget.recintoId),
+                    );
+              }
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

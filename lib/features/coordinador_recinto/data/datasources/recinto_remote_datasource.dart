@@ -59,10 +59,11 @@ class RecintoRemoteDatasourceImpl implements RecintoRemoteDatasource {
         final actasDocs = await databases.listDocuments(
           databaseId: AppwriteConstants.databaseId,
           collectionId: AppwriteConstants.actasCollectionId,
-          queries: [Query.equal('mesa_id', mesaIds)],
         );
         for (final doc in actasDocs.documents) {
-          mesasConActa.add(doc.data['mesa_id'] as String);
+          if (mesaIds.contains(doc.data['mesa_id'])) {
+            mesasConActa.add(doc.data['mesa_id'] as String);
+          }
         }
       }
 
@@ -174,15 +175,17 @@ class RecintoRemoteDatasourceImpl implements RecintoRemoteDatasource {
       final actasDocs = await databases.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.actasCollectionId,
-        queries: [Query.equal('mesa_id', mesaId)],
       );
 
-      if (actasDocs.documents.isEmpty) {
+      final actaDoc = actasDocs.documents
+          .where((doc) => doc.data['mesa_id'] == mesaId)
+          .firstOrNull;
+
+      if (actaDoc == null) {
         throw NotFoundException('No hay acta registrada para esta mesa');
       }
 
-      return ActaModel.fromMap(
-          actasDocs.documents.first.data, actasDocs.documents.first.$id);
+      return ActaModel.fromMap(actaDoc.data, actaDoc.$id);
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener acta');
     }
@@ -281,12 +284,12 @@ class RecintoRemoteDatasourceImpl implements RecintoRemoteDatasource {
         final actasDocs = await databases.listDocuments(
           databaseId: AppwriteConstants.databaseId,
           collectionId: AppwriteConstants.actasCollectionId,
-          queries: [
-            Query.equal('mesa_id', mesaIds),
-            Query.equal('estado', 'registrada'),
-          ],
         );
-        actasRegistradas = actasDocs.documents.length;
+        actasRegistradas = actasDocs.documents
+            .where((doc) =>
+                mesaIds.contains(doc.data['mesa_id']) &&
+                doc.data['estado'] == 'registrada')
+            .length;
       }
 
       return {

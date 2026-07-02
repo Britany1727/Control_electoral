@@ -70,6 +70,15 @@ class SubirFotoActa extends VeedorEvent {
   List<Object?> get props => [filePath, actaId];
 }
 
+class LoadVotosPorActa extends VeedorEvent {
+  final String actaId;
+
+  const LoadVotosPorActa({required this.actaId});
+
+  @override
+  List<Object?> get props => [actaId];
+}
+
 class CorregirActaVeedor extends VeedorEvent {
   final String actaId;
   final int totalSufragantes;

@@ -27,6 +27,7 @@ abstract class ProvincialRepository {
   Future<Either<Failure, Map<String, int>>> getAvanceRecinto(
     String recintoId,
   );
+  Future<Either<Failure, Map<String, dynamic>>> getResumenGlobal();
   Future<Either<Failure, List<Acta>>> getActasPorRecinto(
     String recintoId,
   );

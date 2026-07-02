@@ -89,7 +89,14 @@ class _RecintosListPageState extends State<RecintosListPage> {
               ),
             );
           }
-          return const SizedBox.shrink();
+          if (state is! ProvincialInitial) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<ProvincialBloc>().add(const LoadRecintos());
+              }
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

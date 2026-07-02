@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
 import '../bloc/provincial_state.dart';
@@ -243,21 +244,36 @@ class _DetalleActaPageState extends State<DetalleActaPage> {
               ),
             );
           }
-          return const SizedBox.shrink();
+          if (state is! ProvincialInitial) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<ProvincialBloc>().add(
+                      LoadDetalleActa(
+                        actaId: widget.actaId,
+                        mesaId: widget.mesaId,
+                      ),
+                    );
+              }
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
   }
 
-  void _openGoogleMaps(double lat, double lng) {
+  Future<void> _openGoogleMaps(double lat, double lng) async {
     final url = 'https://www.google.com/maps?q=$lat,$lng';
-    // ignore: deprecated_member_use
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Abrir mapa: $url'),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo abrir Google Maps: $url')),
+        );
+      }
+    }
   }
 }
 
