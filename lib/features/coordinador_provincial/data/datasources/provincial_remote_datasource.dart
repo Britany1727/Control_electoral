@@ -220,10 +220,6 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         documentId: recintoId,
         data: {'coordinador_recinto_id': authUserId},
       );
-
-      await account.createVerification(
-        url: '${AppwriteConstants.recoveryBaseUrl}/verificacion',
-      );
     } on ServerException {
       rethrow;
     } on AppwriteException catch (e) {

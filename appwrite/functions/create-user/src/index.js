@@ -1,4 +1,4 @@
-import { Client, Users } from 'node-appwrite';
+import { Client, Users, Account } from 'node-appwrite';
 
 export default async ({ req, res, log, error }) => {
   try {
@@ -23,23 +23,48 @@ export default async ({ req, res, log, error }) => {
     const users = new Users(client);
 
     let authUserId;
-    try {
-      const created = await users.create('unique()', email, undefined, password, name || '');
-      authUserId = created.$id;
-      log(`Usuario creado: ${authUserId}`);
-    } catch (e) {
-      log(`Error create: code=${e.code} message=${e.message}`);
-      if (e.code === 409) {
-        const list = await users.list();
-        const found = list.users.find(u => u.email === email);
-        if (found) {
-          authUserId = found.$id;
-          log(`Usuario existente recuperado: ${authUserId}`);
+    const esUsuarioNuevo = await (async () => {
+      try {
+        const created = await users.create('unique()', email, undefined, password, name || '');
+        authUserId = created.$id;
+        log(`Usuario creado: ${authUserId}`);
+        return true;
+      } catch (e) {
+        log(`Error create: code=${e.code} message=${e.message}`);
+        if (e.code === 409) {
+          const list = await users.list();
+          const found = list.users.find(u => u.email === email);
+          if (found) {
+            authUserId = found.$id;
+            log(`Usuario existente recuperado: ${authUserId}`);
+            return false;
+          } else {
+            res.json({ success: false, error: 'Email ya existe pero no se encontró en listado' }, 409);
+            return false;
+          }
         } else {
-          return res.json({ success: false, error: 'Email ya existe pero no se encontró en listado' }, 409);
+          res.json({ success: false, error: e.message }, e.code || 500);
+          return false;
         }
-      } else {
-        return res.json({ success: false, error: e.message }, e.code || 500);
+      }
+    })();
+
+    if (!authUserId) return;
+
+    if (esUsuarioNuevo) {
+      try {
+        const tempClient = new Client()
+          .setEndpoint(endpoint)
+          .setProject(projectId);
+
+        const tempAccount = new Account(tempClient);
+        await tempAccount.createEmailPasswordSession(email, password);
+        await tempAccount.createVerification(
+          'https://control-electoral-cbs0.onrender.com/verificacion'
+        );
+        log(`Correo de verificación enviado a ${email}`);
+      } catch (e) {
+        log(`Error al enviar verificación a ${email}: ${e.message}`);
       }
     }
 
