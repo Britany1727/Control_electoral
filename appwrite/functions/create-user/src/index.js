@@ -1,15 +1,18 @@
-import { Client, Users } from 'node-appwrite';
+import { Client, Users, Query } from 'node-appwrite'; // <- Importamos Query aquí
 
 export default async ({ req, res, log, error }) => {
   try {
-    const { email, password, name, userId } = JSON.parse(req.body || '{}');
+    // Manejo seguro del cuerpo de la petición (soporta strings u objetos parseados)
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body;
+    const { email, password, name, userId } = body;
 
     if (!email || !password) {
       return res.json({ success: false, error: 'email y password son requeridos' }, 400);
     }
 
+    // Inicialización del cliente usando las variables del entorno de Appwrite
     const client = new Client()
-      .setEndpoint(process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
+      .setEndpoint(process.env.APPWRITE_URL || 'https://cloud.appwrite.io/v1') // Variable oficial: APPWRITE_URL
       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
       .setKey(process.env.APPWRITE_API_KEY);
 
@@ -27,9 +30,15 @@ export default async ({ req, res, log, error }) => {
       authUserId = created.$id;
       log(`Usuario creado en Auth: ${authUserId}`);
     } catch (e) {
+      // Control de conflicto si el correo ya existe
       if (e.code === 409) {
         log(`Usuario ya existe en Auth con email ${email}, obteniendo ID...`);
-        const list = await users.list([`email.equal("${email}")`]);
+        
+        // CORRECCIÓN: Uso correcto de Query.equal del SDK
+        const list = await users.list([
+          Query.equal('email', [email])
+        ]);
+
         if (list.users.length > 0) {
           authUserId = list.users[0].$id;
           log(`Usuario existente recuperado: ${authUserId}`);
