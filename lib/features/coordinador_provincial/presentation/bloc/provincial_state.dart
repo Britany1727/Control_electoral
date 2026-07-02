@@ -105,6 +105,10 @@ class DetalleActaLoaded extends ProvincialState {
   List<Object?> get props => [detalle];
 }
 
+class RecintoDeleted extends ProvincialState {
+  const RecintoDeleted();
+}
+
 class ProvincialError extends ProvincialState {
   final String message;
 

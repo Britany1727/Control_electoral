@@ -38,4 +38,5 @@ abstract class ProvincialRepository {
     String actaId,
     String mesaId,
   );
+  Future<Either<Failure, Null>> deleteRecinto(String recintoId);
 }

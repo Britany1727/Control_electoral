@@ -26,6 +26,7 @@ import 'features/coordinador_provincial/domain/usecases/create_recinto_usecase.d
 import 'features/coordinador_provincial/domain/usecases/get_actas_por_recinto_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_avance_recinto_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_detalle_acta_usecase.dart';
+import 'features/coordinador_provincial/domain/usecases/delete_recinto_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_recintos_sin_coordinador_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_recintos_usecase.dart';
 import 'features/coordinador_provincial/domain/usecases/get_resumen_global_usecase.dart';
@@ -112,6 +113,7 @@ Future<void> init() async {
         getDetalleActaUseCase: sl(),
         getActasPorRecintoUseCase: sl(),
         getResumenGlobalUseCase: sl(),
+        deleteRecintoUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetRecintosUseCase(sl()));
   sl.registerLazySingleton(() => CreateRecintoUseCase(sl()));
@@ -122,6 +124,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetDetalleActaUseCase(sl()));
   sl.registerLazySingleton(() => GetResumenGlobalUseCase(sl()));
   sl.registerLazySingleton(() => GetActasPorRecintoUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteRecintoUseCase(sl()));
   sl.registerLazySingleton<ProvincialRepository>(
       () => ProvincialRepositoryImpl(sl()));
   sl.registerLazySingleton<ProvincialRemoteDatasource>(

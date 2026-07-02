@@ -19,11 +19,49 @@ class _RecintosListPageState extends State<RecintosListPage> {
     context.read<ProvincialBloc>().add(const LoadRecintos());
   }
 
+  Future<void> _confirmarEliminacion(String recintoId, String recintoNombre) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar Recinto'),
+        content: Text(
+          '¿Estás seguro de eliminar "$recintoNombre"?\n\n'
+          'Se eliminarán también todas las mesas asociadas. Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && mounted) {
+      context.read<ProvincialBloc>().add(DeleteRecinto(recintoId: recintoId));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Recintos')),
-      body: BlocBuilder<ProvincialBloc, ProvincialState>(
+      body: BlocConsumer<ProvincialBloc, ProvincialState>(
+        listener: (context, state) {
+          if (state is RecintoDeleted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Recinto eliminado correctamente'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            context.read<ProvincialBloc>().add(const LoadRecintos());
+          }
+        },
         builder: (context, state) {
           if (state is ProvincialLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -69,7 +107,19 @@ class _RecintosListPageState extends State<RecintosListPage> {
                       subtitle: Text(
                         '${recinto.canton} - ${recinto.parroquia}',
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () => _confirmarEliminacion(
+                              recinto.id,
+                              recinto.nombre,
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(

@@ -78,6 +78,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       return result;
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener mesas del veedor');
+    } catch (e) {
+      throw ServerException('Error de red al obtener mesas: $e');
     }
   }
 
@@ -128,6 +130,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       return ActaModel.fromMap(doc.data, doc.$id);
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al registrar acta');
+    } catch (e) {
+      throw ServerException('Error de red al registrar acta: $e');
     }
   }
 
@@ -158,6 +162,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       return fotoUrl.toString();
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al subir foto');
+    } catch (e) {
+      throw ServerException('Error de red al subir foto: $e');
     }
   }
 
@@ -173,6 +179,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
           .toList();
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener organizaciones');
+    } catch (e) {
+      throw ServerException('Error de red al obtener organizaciones: $e');
     }
   }
 
@@ -219,6 +227,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       }
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al corregir acta');
+    } catch (e) {
+      throw ServerException('Error de red al corregir acta: $e');
     }
   }
 
@@ -233,6 +243,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       return {'id': doc.$id, ...doc.data};
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener acta');
+    } catch (e) {
+      throw ServerException('Error de red al obtener acta: $e');
     }
   }
 
@@ -246,6 +258,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       );
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al eliminar acta');
+    } catch (e) {
+      throw ServerException('Error de red al eliminar acta: $e');
     }
   }
 
@@ -266,6 +280,8 @@ class VeedorRemoteDatasourceImpl implements VeedorRemoteDatasource {
       return votos;
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener votos del acta');
+    } catch (e) {
+      throw ServerException('Error de red al obtener votos del acta: $e');
     }
   }
 }

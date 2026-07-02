@@ -60,22 +60,122 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
     }
   }
 
-  Future<void> _obtenerGps() async {
-    final enabled = await GpsHelper.isGpsEnabled();
-    if (!enabled) return;
+  Future<bool> _obtenerGps({bool showFeedback = true}) async {
+    try {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
 
-    final permission = await GpsHelper.checkPermission();
-    if (permission == LocationPermission.denied) {
-      await GpsHelper.requestPermission();
-    }
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        if (mounted && showFeedback) {
+          final activar = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('GPS desactivado'),
+              content: const Text(
+                'Activa la ubicación en Ajustes para registrar la ubicación del acta.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Omitir'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Geolocator.openLocationSettings();
+                    Navigator.pop(ctx, true);
+                  },
+                  child: const Text('Abrir Ajustes'),
+                ),
+              ],
+            ),
+          );
+          if (activar == true) {
+            return _obtenerGps(showFeedback: showFeedback);
+          }
+        }
+        return false;
+      }
 
-    final position = await GpsHelper.getCurrentPosition();
-    if (position != null && mounted) {
-      setState(() {
-        _gpsObtained = true;
-        _gpsLat = position.latitude;
-        _gpsLng = position.longitude;
-      });
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted && showFeedback) {
+          final abrirAjustes = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Permiso de ubicación denegado'),
+              content: const Text(
+                'El permiso de ubicación fue denegado permanentemente. '
+                'Debes activarlo manualmente en Ajustes.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Omitir'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Geolocator.openAppSettings();
+                    Navigator.pop(ctx, true);
+                  },
+                  child: const Text('Abrir Ajustes'),
+                ),
+              ],
+            ),
+          );
+          if (abrirAjustes == true) {
+            return _obtenerGps(showFeedback: showFeedback);
+          }
+        }
+        return false;
+      }
+      if (permission == LocationPermission.denied) {
+        if (showFeedback && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Permiso de ubicación denegado.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return false;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+      if (mounted) {
+        setState(() {
+          _gpsObtained = true;
+          _gpsLat = position.latitude;
+          _gpsLng = position.longitude;
+        });
+        if (showFeedback) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ubicación GPS obtenida correctamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+      return true;
+    } catch (_) {
+      if (showFeedback && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo obtener ubicación GPS.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return false;
     }
   }
 
@@ -118,10 +218,12 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
           ),
         );
         if (retry == true) {
-          _tomarFoto();
+          await _tomarFoto();
+          return;
         }
+      } else {
+        return;
       }
-      return;
     }
 
     setState(() => _imageFile = file);
@@ -141,7 +243,7 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
     return (sumaOrg + nulos + blancos) == total;
   }
 
-  void _onGuardar() {
+  Future<void> _onGuardar() async {
     if (!_formKey.currentState!.validate()) return;
 
     final total = int.tryParse(_totalController.text) ?? 0;
@@ -188,8 +290,30 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
           backgroundColor: Colors.orange,
         ),
       );
-      _obtenerGps();
-      return;
+      final ok = await _obtenerGps();
+      if (!ok && mounted) {
+        final skip = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('GPS no disponible'),
+            content: const Text(
+              'No se pudo obtener la ubicación. '
+              '¿Deseas continuar sin GPS?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Reintentar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Continuar sin GPS'),
+              ),
+            ],
+          ),
+        );
+        if (skip != true) return;
+      }
     }
 
     final authState = context.read<AuthBloc>().state;
@@ -213,9 +337,9 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
           RegistrarActa(
             mesaId: _selectedMesaId!,
             dignidad: _currentDignidad,
-            totalSufragantes: int.parse(_totalController.text),
-            votosNulos: int.parse(_nulosController.text),
-            votosBlancos: int.parse(_blancosController.text),
+            totalSufragantes: total,
+            votosNulos: int.tryParse(_nulosController.text) ?? 0,
+            votosBlancos: int.tryParse(_blancosController.text) ?? 0,
             gpsLatitud: _gpsLat,
             gpsLongitud: _gpsLng,
             registradoPor: registradoPor,
@@ -262,7 +386,7 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
     _gpsObtained = false;
     _gpsLat = 0;
     _gpsLng = 0;
-    _obtenerGps();
+    _obtenerGps(showFeedback: false);
   }
 
   @override
@@ -321,7 +445,15 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
           }
           if (state is MesasVeedorLoaded) {
             setState(() => _mesas = state.mesas);
-            _obtenerGps();
+            GpsHelper.getCurrentPosition().then((position) {
+              if (position != null && mounted) {
+                setState(() {
+                  _gpsObtained = true;
+                  _gpsLat = position.latitude;
+                  _gpsLng = position.longitude;
+                });
+              }
+            });
           }
           if (state is OrganizacionesLoaded) {
             setState(() {
@@ -389,7 +521,7 @@ class _RegistrarActaPageState extends State<RegistrarActaPage> {
         return;
       }
       _step = _isAlcaldeRegistered ? 2 : 1;
-      _obtenerGps();
+      _obtenerGps(showFeedback: false);
     });
   }
 

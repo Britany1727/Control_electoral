@@ -128,6 +128,16 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
   }
 
   @override
+  Future<Either<Failure, Null>> deleteRecinto(String recintoId) async {
+    try {
+      await remoteDatasource.deleteRecinto(recintoId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, DetalleActaCompleto>> getDetalleActa(
     String actaId,
     String mesaId,

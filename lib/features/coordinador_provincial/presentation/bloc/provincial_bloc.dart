@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/usecases/create_coordinador_recinto_usecase.dart';
 import '../../domain/usecases/create_recinto_usecase.dart';
+import '../../domain/usecases/delete_recinto_usecase.dart';
 import '../../domain/usecases/get_actas_por_recinto_usecase.dart';
 import '../../domain/usecases/get_avance_recinto_usecase.dart';
 import '../../domain/usecases/get_detalle_acta_usecase.dart';
@@ -23,6 +24,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
   final GetDetalleActaUseCase getDetalleActaUseCase;
   final GetActasPorRecintoUseCase getActasPorRecintoUseCase;
   final GetResumenGlobalUseCase getResumenGlobalUseCase;
+  final DeleteRecintoUseCase deleteRecintoUseCase;
 
   ProvincialBloc({
     required this.getRecintosUseCase,
@@ -34,6 +36,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     required this.getDetalleActaUseCase,
     required this.getActasPorRecintoUseCase,
     required this.getResumenGlobalUseCase,
+    required this.deleteRecintoUseCase,
   }) : super(const ProvincialInitial()) {
     on<LoadRecintos>(_onLoadRecintos);
     on<CreateRecinto>(_onCreateRecinto, transformer: droppable());
@@ -47,6 +50,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     on<LoadActasPorRecinto>(_onLoadActasPorRecinto);
     on<LoadDetalleActa>(_onLoadDetalleActa);
     on<LoadResumenGlobal>(_onLoadResumenGlobal);
+    on<DeleteRecinto>(_onDeleteRecinto, transformer: droppable());
   }
 
   Future<void> _onLoadRecintos(
@@ -77,6 +81,20 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     result.fold(
       (failure) => emit(ProvincialError(message: failure.message)),
       (recinto) => emit(RecintoCreated(recinto: recinto)),
+    );
+  }
+
+  Future<void> _onDeleteRecinto(
+    DeleteRecinto event,
+    Emitter<ProvincialState> emit,
+  ) async {
+    emit(const ProvincialLoading());
+    final result = await deleteRecintoUseCase(
+      DeleteRecintoParams(recintoId: event.recintoId),
+    );
+    result.fold(
+      (failure) => emit(ProvincialError(message: failure.message)),
+      (_) => emit(const RecintoDeleted()),
     );
   }
 

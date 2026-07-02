@@ -93,6 +93,15 @@ class LoadActasPorRecinto extends ProvincialEvent {
   List<Object?> get props => [recintoId];
 }
 
+class DeleteRecinto extends ProvincialEvent {
+  final String recintoId;
+
+  const DeleteRecinto({required this.recintoId});
+
+  @override
+  List<Object?> get props => [recintoId];
+}
+
 class LoadResumenGlobal extends ProvincialEvent {
   const LoadResumenGlobal();
 

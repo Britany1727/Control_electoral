@@ -32,6 +32,7 @@ abstract class ProvincialRemoteDatasource {
   Future<List<ActaModel>> getActasPorRecinto(String recintoId);
   Future<List<VotosConsolidados>> getVotosConsolidados(String? recintoId);
   Future<DetalleActaCompleto> getDetalleActa(String actaId, String mesaId);
+  Future<void> deleteRecinto(String recintoId);
 }
 
 class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
@@ -495,6 +496,31 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
       );
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al obtener detalle del acta');
+    }
+  }
+
+  @override
+  Future<void> deleteRecinto(String recintoId) async {
+    try {
+      final mesasDocs = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.mesasCollectionId,
+        queries: [Query.equal('recinto_id', recintoId)],
+      );
+      for (final mesa in mesasDocs.documents) {
+        await databases.deleteDocument(
+          databaseId: AppwriteConstants.databaseId,
+          collectionId: AppwriteConstants.mesasCollectionId,
+          documentId: mesa.$id,
+        );
+      }
+      await databases.deleteDocument(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.recintosCollectionId,
+        documentId: recintoId,
+      );
+    } on AppwriteException catch (e) {
+      throw ServerException(e.message ?? 'Error al eliminar recinto');
     }
   }
 
