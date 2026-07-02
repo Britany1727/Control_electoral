@@ -11,15 +11,17 @@ class LoginRequested extends AuthEvent {
   final String cedula;
   final String email;
   final String password;
+  final String? selectedRole;
 
   const LoginRequested({
     required this.cedula,
     required this.email,
     required this.password,
+    this.selectedRole,
   });
 
   @override
-  List<Object?> get props => [cedula, email, password];
+  List<Object?> get props => [cedula, email, password, selectedRole];
 }
 
 class LogoutRequested extends AuthEvent {

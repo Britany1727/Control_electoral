@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
@@ -13,10 +15,14 @@ import '../features/coordinador_recinto/presentation/pages/recinto_dashboard_pag
 import '../features/veedor/presentation/bloc/veedor_bloc.dart';
 import '../features/veedor/presentation/pages/veedor_dashboard_page.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/login',
-  redirect: (context, state) {
-    final authState = context.read<AuthBloc>().state;
+GoRouter createAppRouter(AuthBloc authBloc) {
+  final refreshNotifier = _AuthStateNotifier(authBloc);
+
+  return GoRouter(
+    initialLocation: '/login',
+    refreshListenable: refreshNotifier,
+    redirect: (context, state) {
+      final authState = context.read<AuthBloc>().state;
     final isLoggingIn = state.matchedLocation == '/login';
     final isChangingPassword = state.matchedLocation == '/change-password';
     final isResettingPassword =
@@ -95,4 +101,19 @@ final appRouter = GoRouter(
       ],
     ),
   ],
-);
+  );
+}
+
+class _AuthStateNotifier extends ChangeNotifier {
+  _AuthStateNotifier(AuthBloc authBloc) {
+    _subscription = authBloc.stream.listen((_) => notifyListeners());
+  }
+
+  StreamSubscription? _subscription;
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+}

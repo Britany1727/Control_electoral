@@ -18,6 +18,13 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _selectedRole;
+
+  static const _roles = [
+    'coordinador_provincial',
+    'coordinador_recinto',
+    'veedor',
+  ];
 
   @override
   void dispose() {
@@ -34,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
             cedula: _cedulaController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            selectedRole: _selectedRole,
           ),
         );
   }
@@ -135,6 +143,33 @@ class _LoginPageState extends State<LoginPage> {
                               }
                               return null;
                             },
+                          ),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _selectedRole,
+                            decoration: const InputDecoration(
+                              labelText: 'Rol',
+                              prefixIcon: Icon(Icons.supervised_user_circle),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'coordinador_provincial',
+                                child: Text('Coordinador Provincial'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'coordinador_recinto',
+                                child: Text('Coordinador de Recinto'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'veedor',
+                                child: Text('Veedor'),
+                              ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _selectedRole = v),
+                            validator: (v) =>
+                                v == null ? 'Seleccione un rol' : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(

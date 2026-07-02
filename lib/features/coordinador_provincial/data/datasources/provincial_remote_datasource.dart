@@ -129,6 +129,24 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
     String creadoPor,
   ) async {
     try {
+      final existingUsers = await databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.usuariosCollectionId,
+        queries: [
+          Query.or([
+            Query.equal('cedula', cedula),
+            Query.equal('correo', correo),
+          ]),
+        ],
+      );
+      if (existingUsers.documents.isNotEmpty) {
+        final existing = existingUsers.documents.first.data;
+        if (existing['cedula'] == cedula) {
+          throw ServerException('Ya existe un usuario con la cédula $cedula');
+        }
+        throw ServerException('Ya existe un usuario con el correo $correo');
+      }
+
       final authUser = await account.create(
         userId: ID.unique(),
         email: correo,
@@ -157,15 +175,14 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.recintosCollectionId,
         documentId: recintoId,
-        // FIX: el atributo real en Appwrite se llama 'coordinador_recinto_id'.
-        // Además, este campo debe guardar el $id del USUARIO (Auth/documento),
-        // no la cédula -- ver nota abajo.
         data: {'coordinador_recinto_id': authUser.$id},
       );
 
       await account.createVerification(
         url: '${AppwriteConstants.recoveryBaseUrl}/verificacion',
       );
+    } on ServerException {
+      rethrow;
     } on AppwriteException catch (e) {
       throw ServerException(
         e.message ?? 'Error al crear coordinador de recinto',

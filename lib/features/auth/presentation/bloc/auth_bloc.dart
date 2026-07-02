@@ -47,6 +47,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         },
         (usuario) {
           debugPrint('[AUTH_BLOC] Login exitoso: id=${usuario.id} rol=${usuario.rol} primerLogin=${usuario.primerLogin}');
+          if (event.selectedRole != null && usuario.rol != event.selectedRole) {
+            emit(AuthError(
+              message: 'El usuario no tiene el rol "${_labelRol(event.selectedRole!)}"',
+            ));
+            return;
+          }
           if (usuario.primerLogin) {
             emit(AuthRequiresPasswordChange(usuario: usuario));
           } else {
@@ -132,6 +138,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       emit(AuthAuthenticated(usuario: usuario));
     }
+  }
+
+  String _labelRol(String rol) {
+    return switch (rol) {
+      'coordinador_provincial' => 'Coordinador Provincial',
+      'coordinador_recinto' => 'Coordinador de Recinto',
+      'veedor' => 'Veedor',
+      _ => rol,
+    };
   }
 
   Future<void> _onResetAuthState(

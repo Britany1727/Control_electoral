@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -10,7 +11,7 @@ import 'features/veedor/presentation/bloc/veedor_bloc.dart';
 import 'features/veedor/presentation/sync/sync_bloc.dart';
 import 'injection_container.dart' as di;
 import 'injection_container.dart';
-import 'router/app_router.dart';
+import 'router/app_router.dart' as router;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +21,15 @@ void main() async {
   runApp(const ControlElectoralApp());
 }
 
-class ControlElectoralApp extends StatelessWidget {
+class ControlElectoralApp extends StatefulWidget {
   const ControlElectoralApp({super.key});
+
+  @override
+  State<ControlElectoralApp> createState() => _ControlElectoralAppState();
+}
+
+class _ControlElectoralAppState extends State<ControlElectoralApp> {
+  late final GoRouter _appRouter = router.createAppRouter(sl<AuthBloc>());
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,7 @@ class ControlElectoralApp extends StatelessWidget {
           useMaterial3: true,
           brightness: Brightness.light,
         ),
-        routerConfig: appRouter,
+        routerConfig: _appRouter,
       ),
     );
   }
