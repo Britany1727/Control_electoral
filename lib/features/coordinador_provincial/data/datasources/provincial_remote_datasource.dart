@@ -93,21 +93,16 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         'nombre': nombre,
       };
 
-      // FIX: numero_jrv es tipo integer en Appwrite, se debe convertir
-      // desde el String que llega del formulario (TextEditingController.text)
+      int? totalMesas;
       if (numeroJrv != null && numeroJrv.trim().isNotEmpty) {
-        final parsedNumeroJrv = int.tryParse(numeroJrv.trim());
-        if (parsedNumeroJrv == null) {
+        totalMesas = int.tryParse(numeroJrv.trim());
+        if (totalMesas == null) {
           throw ServerException(
             'Número JRV inválido: debe ser un valor numérico',
           );
         }
-        data['numero_jrv'] = parsedNumeroJrv;
+        data['numero_jrv'] = totalMesas;
       }
-      // NOTA: si la columna 'numero_jrv' está marcada como "required" en
-      // Appwrite, este createDocument fallará cuando numeroJrv sea null o
-      // vacío. Si el campo debe ser realmente opcional, recuerda quitar el
-      // "Required" en Appwrite Console -> recintos -> Columns -> numero_jrv.
 
       final doc = await databases.createDocument(
         databaseId: AppwriteConstants.databaseId,
@@ -115,6 +110,21 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         documentId: ID.unique(),
         data: data,
       );
+
+      if (totalMesas != null && totalMesas > 0) {
+        for (var i = 1; i <= totalMesas; i++) {
+          await databases.createDocument(
+            databaseId: AppwriteConstants.databaseId,
+            collectionId: AppwriteConstants.mesasCollectionId,
+            documentId: ID.unique(),
+            data: {
+              'numero_jrv': i.toString(),
+              'recinto_id': doc.$id,
+            },
+          );
+        }
+      }
+
       return RecintoModel.fromMap(doc.data, doc.$id);
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Error al crear recinto');
