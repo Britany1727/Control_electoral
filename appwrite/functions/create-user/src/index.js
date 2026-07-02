@@ -1,59 +1,51 @@
-import { Client, Users, Query } from 'node-appwrite'; // <- Importamos Query aquí
+import { Client, Users } from 'node-appwrite';
 
 export default async ({ req, res, log, error }) => {
   try {
-    // Manejo seguro del cuerpo de la petición (soporta strings u objetos parseados)
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body;
-    const { email, password, name, userId } = body;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { email, password, name } = body;
+
+    log(`Recibido: email=${email}, name=${name}`);
 
     if (!email || !password) {
       return res.json({ success: false, error: 'email y password son requeridos' }, 400);
     }
 
-    // Inicialización del cliente usando las variables del entorno inyectadas por Appwrite Cloud
+    const endpoint = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_ENDPOINT || 'https://cloud.appwrite.io/v1';
+    const projectId = process.env.APPWRITE_PROJECT_ID || process.env.APPWRITE_FUNCTION_PROJECT_ID;
+    log(`endpoint=${endpoint} projectId=${projectId}`);
+
     const client = new Client()
-      .setEndpoint(process.env.APPWRITE_FUNCTION_ENDPOINT)
-      .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+      .setEndpoint(endpoint)
+      .setProject(projectId)
       .setKey(process.env.APPWRITE_API_KEY);
 
     const users = new Users(client);
 
     let authUserId;
     try {
-      const created = await users.create(
-        userId || 'unique()',
-        email,
-        undefined, // phone
-        password,
-        name || '',
-      );
+      const created = await users.create('unique()', email, undefined, password, name || '');
       authUserId = created.$id;
-      log(`Usuario creado en Auth: ${authUserId}`);
+      log(`Usuario creado: ${authUserId}`);
     } catch (e) {
-      // Control de conflicto si el correo ya existe
+      log(`Error create: code=${e.code} message=${e.message}`);
       if (e.code === 409) {
-        log(`Usuario ya existe en Auth con email ${email}, obteniendo ID...`);
-        
-        // CORRECCIÓN: Uso correcto de Query.equal del SDK
-        const list = await users.list([
-          Query.equal('email', [email])
-        ]);
-
-        if (list.users.length > 0) {
-          authUserId = list.users[0].$id;
+        const list = await users.list();
+        const found = list.users.find(u => u.email === email);
+        if (found) {
+          authUserId = found.$id;
           log(`Usuario existente recuperado: ${authUserId}`);
         } else {
-          return res.json({ success: false, error: 'El email ya existe pero no se pudo recuperar el usuario' }, 409);
+          return res.json({ success: false, error: 'Email ya existe pero no se encontró en listado' }, 409);
         }
       } else {
-        error(`Error al crear usuario en Auth: ${e.message}`);
         return res.json({ success: false, error: e.message }, e.code || 500);
       }
     }
 
     return res.json({ success: true, userId: authUserId });
   } catch (e) {
-    error(`Error inesperado: ${e.message}`);
+    error(`Fatal: ${e.message}`);
     return res.json({ success: false, error: e.message }, 500);
   }
 };
