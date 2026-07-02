@@ -19,7 +19,17 @@ app.get('/verify-email', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'verify-email.html'));
 });
 
+// Alias por si en Appwrite configuraste la URL de verificación como /verify
+app.get('/verify', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'verify-email.html'));
+});
+
 app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
+});
+
+// Alias por si en Appwrite configuraste la URL de recuperación como /recovery
+app.get('/recovery', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
 });
 
