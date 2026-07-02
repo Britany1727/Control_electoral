@@ -36,6 +36,7 @@ class CreateCoordinadorRecinto extends ProvincialEvent {
   final String telefono;
   final String correo;
   final String creadoPor;
+  final String password;
 
   const CreateCoordinadorRecinto({
     required this.recintoId,
@@ -45,6 +46,7 @@ class CreateCoordinadorRecinto extends ProvincialEvent {
     required this.telefono,
     required this.correo,
     required this.creadoPor,
+    this.password = 'Ecuador2026',
   });
 
   @override
@@ -56,6 +58,7 @@ class CreateCoordinadorRecinto extends ProvincialEvent {
         telefono,
         correo,
         creadoPor,
+        password,
       ];
 }
 

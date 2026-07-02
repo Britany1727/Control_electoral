@@ -9,6 +9,7 @@ class Usuario extends Equatable {
   final String correo;
   final String rol;
   final bool primerLogin;
+  final bool emailVerificado;
   final String? recintoId;
   final String? creadoPor;
 
@@ -21,6 +22,7 @@ class Usuario extends Equatable {
     required this.correo,
     required this.rol,
     required this.primerLogin,
+    this.emailVerificado = false,
     this.recintoId,
     this.creadoPor,
   });
@@ -37,6 +39,7 @@ class Usuario extends Equatable {
         correo,
         rol,
         primerLogin,
+        emailVerificado,
         recintoId,
         creadoPor,
       ];

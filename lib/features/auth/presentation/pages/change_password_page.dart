@@ -53,6 +53,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
             );
           } else if (state is AuthUnauthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Contraseña cambiada correctamente. Inicia sesión de nuevo.'),
+                backgroundColor: Colors.green,
+              ),
+            );
             context.go('/login');
           }
         },

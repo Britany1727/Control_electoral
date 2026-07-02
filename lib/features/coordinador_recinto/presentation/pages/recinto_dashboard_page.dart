@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/widgets/email_verification_banner.dart';
 import '../bloc/recinto_bloc.dart';
 import '../bloc/recinto_event.dart';
 import '../bloc/recinto_state.dart';
@@ -32,148 +33,175 @@ class _RecintoDashboardPageState extends State<RecintoDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Panel Recinto'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthBloc>().add(const LogoutRequested());
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<AuthBloc, AuthState>(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sesión cerrada correctamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Panel Recinto'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                context.read<AuthBloc>().add(const LogoutRequested());
+              },
+            ),
+          ],
+        ),
+        body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           if (authState is AuthAuthenticated) {
             final usuario = authState.usuario;
             final recintoId = usuario.recintoId;
-            return RefreshIndicator(
-              onRefresh: () async {
-                if (recintoId != null) {
-                  context
-                      .read<RecintoBloc>()
-                      .add(LoadAvance(recintoId: recintoId));
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.person,
-                                size: 48, color: Colors.teal),
-                            const SizedBox(height: 8),
-                            Text(
-                              usuario.nombreCompleto,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+            return Column(
+              children: [
+                EmailVerificationBanner(usuario: usuario),
+                Expanded(
+                  child: recintoId == null
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              'No tienes un recinto asignado. Contacta al coordinador provincial.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16, color: Colors.red),
                             ),
-                            const Text(
-                              'Coordinador de Recinto',
-                              style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: () async {
+                            context
+                                .read<RecintoBloc>()
+                                .add(LoadAvance(recintoId: recintoId));
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      children: [
+                                        const Icon(Icons.person,
+                                            size: 48, color: Colors.teal),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          usuario.nombreCompleto,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'Coordinador de Recinto',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                BlocBuilder<RecintoBloc, RecintoState>(
+                                  builder: (context, state) {
+                                    if (state is AvanceLoaded) {
+                                      return Card(
+                                        color: Colors.teal.shade50,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            children: [
+                                              _AvanceItem(
+                                                label: 'Mesas',
+                                                value: '${state.totalMesas}',
+                                                icon: Icons.table_chart,
+                                              ),
+                                              _AvanceItem(
+                                                label: 'Actas',
+                                                value: '${state.actasRegistradas}',
+                                                icon: Icons.description,
+                                              ),
+                                              _AvanceItem(
+                                                label: 'Pendientes',
+                                                value:
+                                                    '${state.totalMesas - state.actasRegistradas}',
+                                                icon: Icons.pending,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    if (state is RecintoLoading) {
+                                      return const Center(
+                                          child: LinearProgressIndicator());
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                ),
+                                const SizedBox(height: 24),
+                                _DashboardButton(
+                                  icon: Icons.table_chart,
+                                  label: 'Gestionar Mesas',
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => BlocProvider.value(
+                                          value: context.read<RecintoBloc>(),
+                                          child: MesasListPage(
+                                              recintoId: recintoId),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                _DashboardButton(
+                                  icon: Icons.person_add,
+                                  label: 'Crear Veedor',
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => BlocProvider.value(
+                                          value: context.read<RecintoBloc>(),
+                                          child: CreateVeedorPage(
+                                              recintoId: recintoId),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                _DashboardButton(
+                                  icon: Icons.search,
+                                  label: 'Buscar Mesa por JRV',
+                                  onTap: () {
+                                    _showBuscarMesaDialog(
+                                        context, recintoId);
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    BlocBuilder<RecintoBloc, RecintoState>(
-                      builder: (context, state) {
-                        if (state is AvanceLoaded) {
-                          return Card(
-                            color: Colors.teal.shade50,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  _AvanceItem(
-                                    label: 'Mesas',
-                                    value: '${state.totalMesas}',
-                                    icon: Icons.table_chart,
-                                  ),
-                                  _AvanceItem(
-                                    label: 'Actas',
-                                    value: '${state.actasRegistradas}',
-                                    icon: Icons.description,
-                                  ),
-                                  _AvanceItem(
-                                    label: 'Pendientes',
-                                    value:
-                                        '${state.totalMesas - state.actasRegistradas}',
-                                    icon: Icons.pending,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        if (state is RecintoLoading) {
-                          return const Center(
-                              child: LinearProgressIndicator());
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    _DashboardButton(
-                      icon: Icons.table_chart,
-                      label: 'Gestionar Mesas',
-                      onTap: () {
-                        if (recintoId == null) return;
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<RecintoBloc>(),
-                              child: MesasListPage(recintoId: recintoId),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _DashboardButton(
-                      icon: Icons.person_add,
-                      label: 'Crear Veedor',
-                      onTap: () {
-                        if (recintoId == null) return;
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<RecintoBloc>(),
-                              child: CreateVeedorPage(
-                                  recintoId: recintoId),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _DashboardButton(
-                      icon: Icons.search,
-                      label: 'Buscar Mesa por JRV',
-                      onTap: () {
-                        if (recintoId == null) return;
-                        _showBuscarMesaDialog(context, recintoId);
-                      },
-                    ),
-                  ],
                 ),
-              ),
+              ],
             );
           }
           return const SizedBox.shrink();
         },
+      ),
       ),
     );
   }

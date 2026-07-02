@@ -20,6 +20,7 @@ class CreateCoordinadorRecintoUseCase
       params.telefono,
       params.correo,
       params.creadoPor,
+      params.password,
     );
   }
 }
@@ -32,6 +33,7 @@ class CreateCoordinadorRecintoParams extends Equatable {
   final String telefono;
   final String correo;
   final String creadoPor;
+  final String password;
 
   const CreateCoordinadorRecintoParams({
     required this.recintoId,
@@ -41,6 +43,7 @@ class CreateCoordinadorRecintoParams extends Equatable {
     required this.telefono,
     required this.correo,
     required this.creadoPor,
+    this.password = 'Ecuador2026',
   });
 
   @override
@@ -52,5 +55,6 @@ class CreateCoordinadorRecintoParams extends Equatable {
         telefono,
         correo,
         creadoPor,
+        password,
       ];
 }

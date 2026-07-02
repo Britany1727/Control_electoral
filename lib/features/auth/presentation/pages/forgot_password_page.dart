@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/recovery_bloc.dart';
 import '../bloc/recovery_event.dart';
 import '../bloc/recovery_state.dart';
@@ -13,19 +14,19 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
-  final _cedulaController = TextEditingController();
+  final _emailController = TextEditingController();
 
   @override
   void dispose() {
-    _cedulaController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  void _onRequestReset() {
+  void _onSendRecovery() {
     if (!_formKey.currentState!.validate()) return;
     context.read<RecoveryBloc>().add(
-          RequestPasswordReset(
-            cedula: _cedulaController.text.trim(),
+          SendRecoveryRequested(
+            email: _emailController.text.trim(),
           ),
         );
   }
@@ -36,7 +37,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       appBar: AppBar(title: const Text('Recuperar Contraseña')),
       body: BlocListener<RecoveryBloc, RecoveryState>(
         listener: (context, state) {
-          if (state is RecoveryError) {
+          if (state is RecoveryFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -45,26 +46,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             );
           }
           if (state is RecoveryEmailSent) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => AlertDialog(
-                title: const Text('Correo Enviado'),
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
                 content: Text(
-                  'Se ha enviado un enlace de recuperación a ${state.email}. '
-                  'Revisa tu bandeja de entrada y sigue las instrucciones.',
+                  'Se ha enviado un enlace de recuperación a tu correo. '
+                  'Revisa tu bandeja de entrada.',
                 ),
-                actions: [
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Volver al inicio'),
-                  ),
-                ],
+                backgroundColor: Colors.green,
               ),
             );
+            context.go('/login');
           }
         },
         child: BlocBuilder<RecoveryBloc, RecoveryState>(
@@ -96,26 +87,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Ingresa tu cédula para recibir un enlace de '
-                            'recuperación en tu correo electrónico.',
+                            'Ingresa tu correo electrónico para recibir '
+                            'un enlace de recuperación.',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 32),
                           TextFormField(
-                            controller: _cedulaController,
-                            keyboardType: TextInputType.number,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
-                              labelText: 'Cédula',
-                              prefixIcon: Icon(Icons.badge),
+                              labelText: 'Correo electrónico',
+                              prefixIcon: Icon(Icons.email),
                               border: OutlineInputBorder(),
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Ingrese su cédula';
+                                return 'Ingrese su correo electrónico';
                               }
-                              if (value.trim().length != 10) {
-                                return 'La cédula debe tener 10 dígitos';
+                              if (!value.contains('@')) {
+                                return 'Ingrese un correo válido';
                               }
                               return null;
                             },
@@ -123,7 +114,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed:
-                                state is RecoveryLoading ? null : _onRequestReset,
+                                state is RecoveryLoading ? null : _onSendRecovery,
                             style: FilledButton.styleFrom(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 16),
@@ -135,7 +126,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 16),
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => context.go('/login'),
                             child: const Text('Volver al inicio de sesión'),
                           ),
                         ],

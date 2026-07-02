@@ -184,6 +184,8 @@ class _CreateVeedorPageState extends State<CreateVeedorPage> {
                               validator: (v) =>
                                   v == null ? 'Seleccione una mesa' : null,
                             )
+                          else if (state is MesasLoaded && state.mesas.isEmpty)
+                            const Text('No hay mesas disponibles en este recinto')
                           else
                             const Text('Cargando mesas...'),
                           const SizedBox(height: 24),

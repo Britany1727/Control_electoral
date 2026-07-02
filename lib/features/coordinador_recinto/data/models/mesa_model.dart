@@ -12,7 +12,7 @@ class MesaModel extends Mesa {
   factory MesaModel.fromMap(Map<String, dynamic> map, String id, {bool hasActa = false}) {
     return MesaModel(
       id: id,
-      numeroJrv: map['numero_jrv'] as String,
+      numeroJrv: (map['numero_jrv'] ?? '').toString(),
       recintoId: map['recinto_id'] as String,
       veedorId: map['veedor_id'] as String?,
       hasActa: hasActa,

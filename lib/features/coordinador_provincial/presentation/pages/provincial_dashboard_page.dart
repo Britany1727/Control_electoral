@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/widgets/email_verification_banner.dart';
 import '../bloc/provincial_bloc.dart';
 import 'create_coordinador_page.dart';
 import 'create_recinto_page.dart';
@@ -13,7 +15,18 @@ class ProvincialDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sesión cerrada correctamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Panel Provincial'),
         actions: [
@@ -25,13 +38,20 @@ class ProvincialDashboardPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          return Column(
             children: [
-              Card(
+              if (authState is AuthAuthenticated)
+                EmailVerificationBanner(usuario: authState.usuario),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -113,11 +133,17 @@ class ProvincialDashboardPage extends StatelessWidget {
                   );
                 },
               ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
-          ),
-        ),
+          );
+        },
       ),
-    );
+    ),
+  );
   }
 }
 

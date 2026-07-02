@@ -10,11 +10,16 @@ class UsuarioModel extends Usuario {
     required super.correo,
     required super.rol,
     required super.primerLogin,
+    super.emailVerificado = false,
     super.recintoId,
     super.creadoPor,
   });
 
-  factory UsuarioModel.fromMap(Map<String, dynamic> map, String id) {
+  factory UsuarioModel.fromMap(
+    Map<String, dynamic> map,
+    String id, {
+    bool emailVerificado = false,
+  }) {
     return UsuarioModel(
       id: id,
       cedula: map['cedula'] as String,
@@ -24,6 +29,7 @@ class UsuarioModel extends Usuario {
       correo: map['correo'] as String,
       rol: map['rol'] as String,
       primerLogin: (map['primer_login'] as bool?) ?? true,
+      emailVerificado: emailVerificado,
       recintoId: map['recinto_id'] as String?,
       creadoPor: map['creado_por'] as String?,
     );

@@ -7,21 +7,21 @@ sealed class RecoveryEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class RequestPasswordReset extends RecoveryEvent {
-  final String cedula;
+class SendRecoveryRequested extends RecoveryEvent {
+  final String email;
 
-  const RequestPasswordReset({required this.cedula});
+  const SendRecoveryRequested({required this.email});
 
   @override
-  List<Object?> get props => [cedula];
+  List<Object?> get props => [email];
 }
 
-class CompletePasswordReset extends RecoveryEvent {
+class ConfirmRecoveryRequested extends RecoveryEvent {
   final String userId;
   final String secret;
   final String newPassword;
 
-  const CompletePasswordReset({
+  const ConfirmRecoveryRequested({
     required this.userId,
     required this.secret,
     required this.newPassword,

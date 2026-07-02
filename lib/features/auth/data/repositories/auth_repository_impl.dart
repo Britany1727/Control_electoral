@@ -129,4 +129,62 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> sendEmailVerification() async {
+    try {
+      await remoteDatasource.sendEmailVerification();
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> confirmEmailVerification({
+    required String userId,
+    required String secret,
+  }) async {
+    try {
+      await remoteDatasource.confirmEmailVerification(userId, secret);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendPasswordRecovery({
+    required String email,
+  }) async {
+    try {
+      await remoteDatasource.sendPasswordRecovery(email);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> confirmPasswordRecovery({
+    required String userId,
+    required String secret,
+    required String newPassword,
+  }) async {
+    try {
+      await remoteDatasource.confirmPasswordRecovery(
+          userId, secret, newPassword);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: ${e.toString()}'));
+    }
+  }
 }

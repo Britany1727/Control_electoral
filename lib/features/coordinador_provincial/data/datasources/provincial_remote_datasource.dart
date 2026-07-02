@@ -1,4 +1,5 @@
 import 'package:appwrite/appwrite.dart';
+import '../../../../core/appwrite/appwrite_client.dart';
 import '../../../../core/constants/appwrite_constants.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -25,6 +26,7 @@ abstract class ProvincialRemoteDatasource {
     String telefono,
     String correo,
     String creadoPor,
+    String password,
   );
   Future<Map<String, int>> getAvanceRecinto(String recintoId);
   Future<List<ActaModel>> getActasPorRecinto(String recintoId);
@@ -127,6 +129,7 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
     String telefono,
     String correo,
     String creadoPor,
+    String password,
   ) async {
     try {
       final existingUsers = await databases.listDocuments(
@@ -147,12 +150,53 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         throw ServerException('Ya existe un usuario con el correo $correo');
       }
 
-      final authUser = await account.create(
-        userId: ID.unique(),
-        email: correo,
-        password: AppConstants.defaultPassword,
-        name: '$nombres $apellidos',
-      );
+      // ignore: avoid_print
+      print('[DEBUG] Creando coordinador con correo="$correo" cedula="$cedula"');
+      try {
+        final currentSession = await account.getSession(sessionId: 'current');
+        // ignore: avoid_print
+        print('[DEBUG] Sesión activa detectada, userId=${currentSession.userId}');
+      } catch (_) {
+        // ignore: avoid_print
+        print('[DEBUG] No hay sesión activa al momento de crear coordinador');
+      }
+
+      var authUser;
+      try {
+        authUser = await account.create(
+          userId: ID.unique(),
+          email: correo,
+          password: password,
+          name: '$nombres $apellidos',
+        );
+        // ignore: avoid_print
+        print('[DEBUG] Usuario creado en Auth: id=${authUser.$id} email=${authUser.email}');
+      } on AppwriteException catch (e) {
+        if (e.code == 409) {
+          // ignore: avoid_print
+          print('[DEBUG] Correo ya existe en Auth. Intentando recuperar usuario existente...');
+          try {
+            final adminSession = await account.getSession(sessionId: 'current');
+            final existingSession = await account.createEmailPasswordSession(
+              email: correo,
+              password: password,
+            );
+            final existingUser = await account.get();
+            authUser = existingUser;
+            await account.deleteSession(sessionId: existingSession.$id);
+            AppwriteClient.instance.client.setSession(adminSession.$id);
+            // ignore: avoid_print
+            print('[DEBUG] Usuario existente recuperado: id=${authUser.$id}');
+          } catch (sessionError) {
+            throw ServerException(
+              'El correo "$correo" ya está registrado con una contraseña diferente. '
+              'Verifica la contraseña o usa otro correo.',
+            );
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       await databases.createDocument(
         databaseId: AppwriteConstants.databaseId,

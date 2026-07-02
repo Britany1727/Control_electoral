@@ -16,22 +16,17 @@ class RecoveryLoading extends RecoveryState {
 }
 
 class RecoveryEmailSent extends RecoveryState {
-  final String email;
-
-  const RecoveryEmailSent({required this.email});
-
-  @override
-  List<Object?> get props => [email];
+  const RecoveryEmailSent();
 }
 
-class RecoveryPasswordReset extends RecoveryState {
-  const RecoveryPasswordReset();
+class RecoverySuccess extends RecoveryState {
+  const RecoverySuccess();
 }
 
-class RecoveryError extends RecoveryState {
+class RecoveryFailure extends RecoveryState {
   final String message;
 
-  const RecoveryError({required this.message});
+  const RecoveryFailure({required this.message});
 
   @override
   List<Object?> get props => [message];

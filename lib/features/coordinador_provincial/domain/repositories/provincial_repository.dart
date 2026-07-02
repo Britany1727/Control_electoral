@@ -22,6 +22,7 @@ abstract class ProvincialRepository {
     String telefono,
     String correo,
     String creadoPor,
+    String password,
   );
   Future<Either<Failure, Map<String, int>>> getAvanceRecinto(
     String recintoId,

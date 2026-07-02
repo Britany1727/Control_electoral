@@ -61,6 +61,12 @@ class _LoginPageState extends State<LoginPage> {
           } else if (state is AuthRequiresPasswordChange) {
             context.go('/change-password');
           } else if (state is AuthAuthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sesión iniciada correctamente'),
+                backgroundColor: Colors.green,
+              ),
+            );
             final route = switch (state.usuario.rol) {
               'coordinador_provincial' => '/provincial',
               'coordinador_recinto' => '/recinto',

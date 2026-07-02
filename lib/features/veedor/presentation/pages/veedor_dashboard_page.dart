@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/widgets/email_verification_banner.dart';
 import '../bloc/veedor_bloc.dart';
 import '../sync/sync_bloc.dart';
 import '../sync/sync_event.dart';
@@ -15,7 +16,18 @@ class VeedorDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sesión cerrada correctamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Panel Veedor'),
         actions: [
@@ -65,11 +77,15 @@ class VeedorDashboardPage extends StatelessWidget {
         builder: (context, authState) {
           if (authState is AuthAuthenticated) {
             final usuario = authState.usuario;
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+            return Column(
+              children: [
+                EmailVerificationBanner(usuario: usuario),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -202,12 +218,16 @@ class VeedorDashboardPage extends StatelessWidget {
                   ),
                 ],
               ),
-            );
+            ),
+          ),
+        ],
+      );
           }
           return const SizedBox.shrink();
         },
       ),
-    );
+    ),
+  );
   }
 }
 

@@ -21,6 +21,7 @@ class _CreateCoordinadorPageState extends State<CreateCoordinadorPage> {
   final _apellidosController = TextEditingController();
   final _telefonoController = TextEditingController();
   final _correoController = TextEditingController();
+  final _passwordController = TextEditingController(text: 'Ecuador2026');
   String? _selectedRecintoId;
   List<_RecintoItem> _recintos = [];
 
@@ -37,6 +38,7 @@ class _CreateCoordinadorPageState extends State<CreateCoordinadorPage> {
     _apellidosController.dispose();
     _telefonoController.dispose();
     _correoController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -62,6 +64,7 @@ class _CreateCoordinadorPageState extends State<CreateCoordinadorPage> {
             telefono: _telefonoController.text.trim(),
             correo: _correoController.text.trim(),
             creadoPor: creadoPor,
+            password: _passwordController.text.trim(),
           ),
         );
   }
@@ -188,6 +191,20 @@ class _CreateCoordinadorPageState extends State<CreateCoordinadorPage> {
                                   .hasMatch(v!.trim())) {
                                 return 'Correo inválido';
                               }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: const InputDecoration(
+                              labelText: 'Contraseña',
+                              border: OutlineInputBorder(),
+                            ),
+                            obscureText: true,
+                            validator: (v) {
+                              if (v?.trim().isEmpty ?? true) return 'Requerido';
+                              if (v!.trim().length < 6) return 'Mínimo 6 caracteres';
                               return null;
                             },
                           ),

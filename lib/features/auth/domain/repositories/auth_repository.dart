@@ -15,4 +15,17 @@ abstract class AuthRepository {
   Future<Either<Failure, String>> requestPasswordReset(String cedula);
   Future<Either<Failure, Null>> completePasswordReset(
       String userId, String secret, String newPassword);
+  Future<Either<Failure, void>> sendEmailVerification();
+  Future<Either<Failure, void>> confirmEmailVerification({
+    required String userId,
+    required String secret,
+  });
+  Future<Either<Failure, void>> sendPasswordRecovery({
+    required String email,
+  });
+  Future<Either<Failure, void>> confirmPasswordRecovery({
+    required String userId,
+    required String secret,
+    required String newPassword,
+  });
 }

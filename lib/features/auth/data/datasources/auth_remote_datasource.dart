@@ -25,6 +25,11 @@ abstract class AuthRemoteDatasource {
   Future<String> requestPasswordReset(String cedula, String resetUrl);
   Future<void> completePasswordReset(
       String userId, String secret, String newPassword);
+  Future<void> sendEmailVerification();
+  Future<void> confirmEmailVerification(String userId, String secret);
+  Future<void> sendPasswordRecovery(String email);
+  Future<void> confirmPasswordRecovery(
+      String userId, String secret, String newPassword);
 }
 
 class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
@@ -111,7 +116,8 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     try {
       debugPrint('[GET_USER] Llamando account.get()...');
       final user = await account.get();
-      debugPrint('[GET_USER] Auth user obtenido: id=${user.$id} email=${user.email}');
+      final emailVerificado = user.emailVerification;
+      debugPrint('[GET_USER] Auth user obtenido: id=${user.$id} email=${user.email} emailVerificado=$emailVerificado');
       final userId = user.$id;
 
       try {
@@ -122,7 +128,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
           documentId: userId,
         );
         debugPrint('[GET_USER] Documento encontrado por ID, id=${doc.$id}');
-        return UsuarioModel.fromMap(doc.data, doc.$id);
+        return UsuarioModel.fromMap(doc.data, doc.$id, emailVerificado: emailVerificado);
       } on AppwriteException catch (e) {
         debugPrint('[GET_USER] No se encontró documento por ID: ${e.message}');
         // Fallback: buscar por cédula (usuarios legacy creados antes
@@ -142,6 +148,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
         return UsuarioModel.fromMap(
           documents.documents.first.data,
           documents.documents.first.$id,
+          emailVerificado: emailVerificado,
         );
       }
     } on AuthException {
@@ -329,6 +336,67 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
       );
     } on AppwriteException catch (e) {
       throw AuthException(e.message ?? 'Error al restablecer la contraseña');
+    }
+  }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    try {
+      debugPrint('[VERIFY] Enviando verificación de correo...');
+      await account.createVerification(
+        url: '${AppwriteConstants.webRedirectUrl}/verify',
+      );
+      debugPrint('[VERIFY] Verificación enviada');
+    } on AppwriteException catch (e) {
+      debugPrint('[VERIFY] Error: ${e.message}');
+      throw ServerException(e.message ?? 'Error al enviar verificación de correo');
+    }
+  }
+
+  @override
+  Future<void> confirmEmailVerification(String userId, String secret) async {
+    try {
+      debugPrint('[VERIFY] Confirmando verificación de correo...');
+      await account.updateVerification(
+        userId: userId,
+        secret: secret,
+      );
+      debugPrint('[VERIFY] Correo verificado exitosamente');
+    } on AppwriteException catch (e) {
+      debugPrint('[VERIFY] Error: ${e.message}');
+      throw ServerException(e.message ?? 'Error al confirmar verificación de correo');
+    }
+  }
+
+  @override
+  Future<void> sendPasswordRecovery(String email) async {
+    try {
+      debugPrint('[RECOVERY] Enviando recuperación de contraseña a $email...');
+      await account.createRecovery(
+        email: email,
+        url: '${AppwriteConstants.webRedirectUrl}/recovery',
+      );
+      debugPrint('[RECOVERY] Correo de recuperación enviado');
+    } on AppwriteException catch (e) {
+      debugPrint('[RECOVERY] Error: ${e.message}');
+      throw ServerException(e.message ?? 'Error al enviar recuperación de contraseña');
+    }
+  }
+
+  @override
+  Future<void> confirmPasswordRecovery(
+      String userId, String secret, String newPassword) async {
+    try {
+      debugPrint('[RECOVERY] Confirmando restablecimiento de contraseña...');
+      await account.updateRecovery(
+        userId: userId,
+        secret: secret,
+        password: newPassword,
+      );
+      debugPrint('[RECOVERY] Contraseña restablecida exitosamente');
+    } on AppwriteException catch (e) {
+      debugPrint('[RECOVERY] Error: ${e.message}');
+      throw ServerException(e.message ?? 'Error al restablecer la contraseña');
     }
   }
 }

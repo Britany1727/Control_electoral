@@ -6,10 +6,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Config pública de Appwrite (endpoint y projectId NO son secretos,
+// son necesarios en el cliente para inicializar el SDK)
 app.get('/api/config', (req, res) => {
   res.json({
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    appwriteEndpoint: process.env.APPWRITE_ENDPOINT, // ej: https://cloud.appwrite.io/v1
+    appwriteProjectId: process.env.APPWRITE_PROJECT_ID,
   });
 });
 

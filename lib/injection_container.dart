@@ -6,13 +6,18 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/change_password_usecase.dart';
 import 'features/auth/domain/usecases/complete_recovery_usecase.dart';
+import 'features/auth/domain/usecases/confirm_email_verification_usecase.dart';
+import 'features/auth/domain/usecases/confirm_password_recovery_usecase.dart';
 import 'features/auth/domain/usecases/create_user_usecase.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/auth/domain/usecases/recover_password_usecase.dart';
 import 'features/auth/domain/usecases/request_recovery_usecase.dart';
+import 'features/auth/domain/usecases/send_email_verification_usecase.dart';
+import 'features/auth/domain/usecases/send_password_recovery_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/recovery_bloc.dart';
+import 'features/auth/presentation/bloc/verification/verification_bloc.dart';
 import 'features/coordinador_provincial/data/datasources/provincial_remote_datasource.dart';
 import 'features/coordinador_provincial/data/repositories/provincial_repository_impl.dart';
 import 'features/coordinador_provincial/domain/repositories/provincial_repository.dart';
@@ -67,8 +72,12 @@ Future<void> init() async {
         recoverPasswordUseCase: sl(),
       ));
   sl.registerFactory(() => RecoveryBloc(
-        requestRecoveryUseCase: sl(),
-        completeRecoveryUseCase: sl(),
+        sendPasswordRecoveryUseCase: sl(),
+        confirmPasswordRecoveryUseCase: sl(),
+      ));
+  sl.registerFactory(() => VerificationBloc(
+        sendEmailVerificationUseCase: sl(),
+        confirmEmailVerificationUseCase: sl(),
       ));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
@@ -76,6 +85,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RecoverPasswordUseCase(sl()));
   sl.registerLazySingleton(() => RequestRecoveryUseCase(sl()));
   sl.registerLazySingleton(() => CompleteRecoveryUseCase(sl()));
+  sl.registerLazySingleton(() => SendEmailVerificationUseCase(sl()));
+  sl.registerLazySingleton(() => ConfirmEmailVerificationUseCase(sl()));
+  sl.registerLazySingleton(() => SendPasswordRecoveryUseCase(sl()));
+  sl.registerLazySingleton(() => ConfirmPasswordRecoveryUseCase(sl()));
   sl.registerLazySingleton(() => CreateUserUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(sl()));

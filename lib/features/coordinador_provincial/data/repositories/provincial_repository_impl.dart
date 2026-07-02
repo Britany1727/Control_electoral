@@ -62,6 +62,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
     String telefono,
     String correo,
     String creadoPor,
+    String password,
   ) async {
     try {
       await remoteDatasource.createCoordinadorRecinto(
@@ -72,6 +73,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
         telefono,
         correo,
         creadoPor,
+        password,
       );
       return const Right(null);
     } on ServerException catch (e) {

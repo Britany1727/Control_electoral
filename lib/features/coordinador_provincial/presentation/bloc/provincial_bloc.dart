@@ -1,3 +1,4 @@
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/usecases/create_coordinador_recinto_usecase.dart';
@@ -32,8 +33,11 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     required this.getActasPorRecintoUseCase,
   }) : super(const ProvincialInitial()) {
     on<LoadRecintos>(_onLoadRecintos);
-    on<CreateRecinto>(_onCreateRecinto);
-    on<CreateCoordinadorRecinto>(_onCreateCoordinadorRecinto);
+    on<CreateRecinto>(_onCreateRecinto, transformer: droppable());
+    on<CreateCoordinadorRecinto>(
+      _onCreateCoordinadorRecinto,
+      transformer: droppable(),
+    );
     on<LoadAvanceRecinto>(_onLoadAvanceRecinto);
     on<LoadRecintosSinCoordinador>(_onLoadRecintosSinCoordinador);
     on<LoadVotosConsolidados>(_onLoadVotosConsolidados);
@@ -76,6 +80,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
     CreateCoordinadorRecinto event,
     Emitter<ProvincialState> emit,
   ) async {
+    if (state is ProvincialLoading) return;
     emit(const ProvincialLoading());
     final result = await createCoordinadorRecintoUseCase(
       CreateCoordinadorRecintoParams(
@@ -86,6 +91,7 @@ class ProvincialBloc extends Bloc<ProvincialEvent, ProvincialState> {
         telefono: event.telefono,
         correo: event.correo,
         creadoPor: event.creadoPor,
+        password: event.password,
       ),
     );
     result.fold(

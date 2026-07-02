@@ -35,7 +35,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void _onResetPassword() {
     if (!_formKey.currentState!.validate()) return;
     context.read<RecoveryBloc>().add(
-          CompletePasswordReset(
+          ConfirmRecoveryRequested(
             userId: widget.userId,
             secret: widget.secret,
             newPassword: _newPasswordController.text,
@@ -49,7 +49,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       appBar: AppBar(title: const Text('Restablecer Contraseña')),
       body: BlocListener<RecoveryBloc, RecoveryState>(
         listener: (context, state) {
-          if (state is RecoveryError) {
+          if (state is RecoveryFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -57,7 +57,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
             );
           }
-          if (state is RecoveryPasswordReset) {
+          if (state is RecoverySuccess) {
             showDialog(
               context: context,
               barrierDismissible: false,

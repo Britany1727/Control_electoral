@@ -32,4 +32,7 @@ class AppwriteConstants {
 
   static String get adminKey =>
       dotenv.env['APPWRITE_ADMIN_KEY'] ?? '';
+
+  static String get webRedirectUrl =>
+      dotenv.env['APPWRITE_WEB_REDIRECT_URL'] ?? 'https://littlelink-personal-projects-control-electoral.appwrite.network';
 }

@@ -8,6 +8,7 @@ class AppwriteClient {
   static AppwriteClient get instance => _instance;
 
   late final Client _client;
+  Client get client => _client;
   late final Account account;
   late final Databases databases;
   late final Storage storage;
