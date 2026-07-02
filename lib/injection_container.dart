@@ -63,6 +63,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AppwriteClient.instance.account);
   sl.registerLazySingleton(() => AppwriteClient.instance.databases);
   sl.registerLazySingleton(() => AppwriteClient.instance.storage);
+  sl.registerLazySingleton(() => AppwriteClient.instance.functions);
 
   // Auth Feature
   sl.registerFactory(() => AuthBloc(
@@ -123,6 +124,7 @@ Future<void> init() async {
       () => ProvincialRemoteDatasourceImpl(
             databases: sl(),
             account: sl(),
+            functions: sl(),
           ));
 
   // Recinto Feature

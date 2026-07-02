@@ -35,4 +35,7 @@ class AppwriteConstants {
 
   static String get webRedirectUrl =>
       dotenv.env['APPWRITE_WEB_REDIRECT_URL'] ?? 'https://control-electoral-cbs0.onrender.com';
+
+  static String get createUserFunctionId =>
+      dotenv.env['APPWRITE_CREATE_USER_FUNCTION_ID'] ?? 'create-user';
 }

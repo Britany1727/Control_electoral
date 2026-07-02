@@ -1,7 +1,6 @@
+import 'dart:convert';
 import 'package:appwrite/appwrite.dart';
-import '../../../../core/appwrite/appwrite_client.dart';
 import '../../../../core/constants/appwrite_constants.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../features/veedor/data/models/acta_model.dart';
 import '../../../../features/veedor/domain/entities/acta.dart';
@@ -37,10 +36,12 @@ abstract class ProvincialRemoteDatasource {
 class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
   final Databases databases;
   final Account account;
+  final Functions functions;
 
   ProvincialRemoteDatasourceImpl({
     required this.databases,
     required this.account,
+    required this.functions,
   });
 
   @override
@@ -161,47 +162,35 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         print('[DEBUG] No hay sesión activa al momento de crear coordinador');
       }
 
-      var authUser;
-      try {
-        authUser = await account.create(
-          userId: ID.unique(),
-          email: correo,
-          password: password,
-          name: '$nombres $apellidos',
+      final execution = await functions.createExecution(
+        functionId: AppwriteConstants.createUserFunctionId,
+        body: jsonEncode({
+          'email': correo,
+          'password': password,
+          'name': '$nombres $apellidos',
+        }),
+        xasync: false,
+      );
+
+      if (execution.status != 'completed') {
+        throw ServerException(
+          'Error al crear usuario: ${execution.responseStatusCode}',
         );
-        // ignore: avoid_print
-        print('[DEBUG] Usuario creado en Auth: id=${authUser.$id} email=${authUser.email}');
-      } on AppwriteException catch (e) {
-        if (e.code == 409) {
-          // ignore: avoid_print
-          print('[DEBUG] Correo ya existe en Auth. Intentando recuperar usuario existente...');
-          try {
-            final adminSession = await account.getSession(sessionId: 'current');
-            final existingSession = await account.createEmailPasswordSession(
-              email: correo,
-              password: password,
-            );
-            final existingUser = await account.get();
-            authUser = existingUser;
-            await account.deleteSession(sessionId: existingSession.$id);
-            AppwriteClient.instance.client.setSession(adminSession.$id);
-            // ignore: avoid_print
-            print('[DEBUG] Usuario existente recuperado: id=${authUser.$id}');
-          } catch (sessionError) {
-            throw ServerException(
-              'El correo "$correo" ya está registrado con una contraseña diferente. '
-              'Verifica la contraseña o usa otro correo.',
-            );
-          }
-        } else {
-          rethrow;
-        }
       }
+
+      final response = jsonDecode(execution.responseBody) as Map<String, dynamic>;
+      if (response['success'] != true) {
+        throw ServerException(
+          response['error'] as String? ?? 'Error al crear usuario en el servidor',
+        );
+      }
+
+      final authUserId = response['userId'] as String;
 
       await databases.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.usuariosCollectionId,
-        documentId: authUser.$id,
+        documentId: authUserId,
         data: {
           'cedula': cedula,
           'nombres': nombres,
@@ -219,7 +208,7 @@ class ProvincialRemoteDatasourceImpl implements ProvincialRemoteDatasource {
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.recintosCollectionId,
         documentId: recintoId,
-        data: {'coordinador_recinto_id': authUser.$id},
+        data: {'coordinador_recinto_id': authUserId},
       );
 
       await account.createVerification(

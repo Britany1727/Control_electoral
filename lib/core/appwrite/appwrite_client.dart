@@ -12,6 +12,7 @@ class AppwriteClient {
   late final Account account;
   late final Databases databases;
   late final Storage storage;
+  late final Functions functions;
 
   void init() {
     _client = Client()
@@ -21,5 +22,6 @@ class AppwriteClient {
     account = Account(_client);
     databases = Databases(_client);
     storage = Storage(_client);
+    functions = Functions(_client);
   }
 }

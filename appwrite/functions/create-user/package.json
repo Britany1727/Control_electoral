@@ -1,0 +1,10 @@
+{
+  "name": "create-user",
+  "version": "1.0.0",
+  "description": "Appwrite Function para crear usuarios en Auth desde el servidor",
+  "main": "src/index.js",
+  "type": "module",
+  "dependencies": {
+    "node-appwrite": "^14.1.0"
+  }
+}
